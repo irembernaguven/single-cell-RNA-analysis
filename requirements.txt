@@ -8,3 +8,5 @@ scikit-learn>=1.0.0
 scipy>=1.9.0
 harmonypy
 leidenalg
+python-igraph
+louvain
