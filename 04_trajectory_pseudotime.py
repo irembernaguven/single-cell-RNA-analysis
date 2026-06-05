@@ -48,17 +48,31 @@ def main():
     
     # 2. Recompute dimensional reductions specifically on the T-cell subset
     print("\n[Step 2] Recomputing PCA and neighbors on T-cell coordinates...")
-    sc.pp.neighbors(adata_t, n_neighbors=10, n_pcs=15)
     sc.tl.pca(adata_t, svd_solver='arpack')
+    sc.pp.neighbors(adata_t, n_neighbors=10, n_pcs=15)
     sc.tl.umap(adata_t)
     
+    # Re-cluster the subset to identify sub-states (and avoid single-node graph crashes in SciPy 1.13+)
+    print("\nRe-clustering T-cell populations to identify sub-states...")
+    try:
+        sc.tl.leiden(adata_t, resolution=0.5, key_added='sub_leiden')
+        cluster_key = 'sub_leiden'
+        print("Sub-clustering completed using Leiden.")
+    except Exception as e:
+        print(f"Leiden sub-clustering failed ({e}). Running Louvain sub-clustering...")
+        sc.tl.louvain(adata_t, resolution=0.5, key_added='sub_louvain')
+        cluster_key = 'sub_louvain'
+        print("Sub-clustering completed using Louvain.")
+        
     # 3. PAGA Connectivity Analysis
-    print("\n[Step 3] Running Partition-Based Graph Abstraction (PAGA) on cell types...")
-    sc.tl.paga(adata_t, groups='cell_type')
+    print(f"\n[Step 3] Running Partition-Based Graph Abstraction (PAGA) on T-cell sub-clusters ('{cluster_key}')...")
+    sc.tl.paga(adata_t, groups=cluster_key)
+    # Define node positions for PAGA to enable 'paga' initialization in UMAP
+    sc.pl.paga(adata_t, show=False)
     
     # Reinitialize UMAP coordinates using PAGA layout mapping
     print("Reinitializing UMAP layout using PAGA graph coordinates...")
-    sc.tl.umap(adata_t, initpos='paga')
+    sc.tl.umap(adata_t, init_pos='paga')
     
     # 4. Root Cell Selection
     print("\n[Step 4] Identifying naive/healthy root cell for pseudotime...")
