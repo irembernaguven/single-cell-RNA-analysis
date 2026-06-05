@@ -1,0 +1,18 @@
+# Ignore large genomic data files
+data/
+*.h5ad
+*.h5mu
+*.rds
+
+# Ignore local output figures and tables
+plots/
+figures/
+results/
+out/
+
+# Ignore Python runtime files
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.DS_Store
