@@ -5,7 +5,6 @@ data/
 *.rds
 
 # Ignore local output figures and tables
-plots/
 figures/
 results/
 out/
